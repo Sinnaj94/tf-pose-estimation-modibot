@@ -9,8 +9,8 @@ import tensorflow as tf
 from tqdm import tqdm
 
 from networks import get_network
-from synthhands import SynthHands
-from hands_dataset import get_dataflow_batch
+from modibot import ModiBot
+from modibot_dataset import get_dataflow_batch
 from dataflow import DataFlowToQueue
 from common import get_sample_images
 
@@ -26,10 +26,10 @@ logger.addHandler(ch)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Training codes for Openpose using Tensorflow')
-    parser.add_argument('--datapath', type=str, default='../hand_labels_synth')
-    parser.add_argument('--batchsize', type=int, default=64)
-    parser.add_argument('--input-width', type=int, default=368)
-    parser.add_argument('--input-height', type=int, default=368)
+    parser.add_argument('--datapath', type=str, default='../mobi_synth')
+    parser.add_argument('--batchsize', type=int, default=20)
+    parser.add_argument('--input-width', type=int, default=512)
+    parser.add_argument('--input-height', type=int, default=512)
     parser.add_argument('--gpus', type=int, default=4)
     parser.add_argument('--checkpoint', type=str, default='')
     parser.add_argument('--lr', type=str, default='0.0001')
@@ -43,8 +43,8 @@ if __name__ == '__main__':
     output_w, output_h = args.input_width // scale, args.input_height // scale
     logger.info('define model+')
     with tf.device(tf.DeviceSpec(device_type="CPU")):
-        input_node = tf.placeholder(tf.float32, shape=(args.batchsize, args.input_height, args.input_width, 3), name='image')
-        heatmap_node = tf.placeholder(tf.float32, shape=(args.batchsize, output_h, output_w, 22), name='heatmap')
+        input_node = tf.compat.v1.placeholder(tf.float32, shape=(args.batchsize, args.input_height, args.input_width, 3), name='image')
+        heatmap_node = tf.compat.v1.placeholder(tf.float32, shape=(args.batchsize, output_h, output_w, 22), name='heatmap')
 
         # prepare data
         df = get_dataflow_batch(args.datapath, True, args.batchsize)
@@ -134,6 +134,7 @@ if __name__ == '__main__':
     saver = tf.train.Saver(max_to_keep=1000)
     config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False)
     config.gpu_options.allow_growth = True
+    # noinspection PyPackageRequirements
     with tf.Session(config=config) as sess:
         logger.info('model weights initialization')
         sess.run(tf.global_variables_initializer())
@@ -227,14 +228,14 @@ if __name__ == '__main__':
 
                 sample_results = []
                 for i in range(len(sample_image)):
-                    test_result = SynthHands.display_image(sample_image[i], heatMat[i], as_numpy=True)
+                    test_result = ModiBot.display_image(sample_image[i], heatMat[i], as_numpy=True)
                     test_result = cv2.resize(test_result, (640, 640))
                     test_result = test_result.reshape([640, 640, 3]).astype(float)
                     sample_results.append(test_result)
 
                 test_results = []
                 for i in range(len(val_image)):
-                    test_result = SynthHands.display_image(val_image[i], heatMat[len(sample_image) + i], as_numpy=True)
+                    test_result = ModiBot.display_image(val_image[i], heatMat[len(sample_image) + i], as_numpy=True)
                     test_result = cv2.resize(test_result, (640, 640))
                     test_result = test_result.reshape([640, 640, 3]).astype(float)
                     test_results.append(test_result)

@@ -1,3 +1,5 @@
+numpy
+PIL
 argparse
 dill
 fire
@@ -7,6 +9,7 @@ psutil
 pycocotools
 requests
 scikit-image
+tensorflow==1.15
 scipy
 slidingwindow
 tqdm
