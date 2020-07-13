@@ -1,5 +1,5 @@
 numpy
-PIL
+pillow
 argparse
 dill
 fire
